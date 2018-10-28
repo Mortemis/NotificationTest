@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+
 namespace NotificationTest
 {
     public partial class Form1 : Form
@@ -16,7 +10,45 @@ namespace NotificationTest
             InitializeComponent();
         }
 
-        
+        #region Events handlers
+
+        #region Notify icon events
+
+        private void ShowFormToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowForm();
+        }
+
+        private void HideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            HideForm();
+        }
+
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void ShowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowNotification();
+        }
+
+        private void NotifyIcon1_DoubleClick(object sender, EventArgs e)
+        {
+            ShowForm();
+        }
+
+        #endregion
+
+        #region Form events
+
+        private void NotificationBtn_Click(object sender, EventArgs e)
+        {
+            ShowNotification();
+        }
+
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
@@ -24,59 +56,39 @@ namespace NotificationTest
             if (e.CloseReason == CloseReason.WindowsShutDown) return;
 
             // Confirm user wants to close
-            switch (MessageBox.Show(this, "Совсем-совсем выйти?", "Closing", MessageBoxButtons.YesNo))
+            if (MessageBox.Show(this, "Совсем-совсем выйти?", "Closing", MessageBoxButtons.YesNo) == DialogResult.No)
             {
-                case DialogResult.No:
-                    e.Cancel = true;
-                    this.Hide();
-                    break;
-                default:
-                    break;
+                HideForm();
+                e.Cancel = true;
             }
         }
 
-        /* todo: сворачивание в трей.
-         * 
-        protected override void OnSizeChanged(EventArgs e)
-        {
-            base.OnSizeChanged(e);
-            if (this.WindowState.Equals(FormWindowState.Minimized))
-            {
-                this.Hide();
-            }
-        }
-        */
+        #endregion
 
-        private void showNotification()
+        #endregion
+
+        #region Private methods
+
+        // прячем в трей
+        private void HideForm()
         {
-            notifyIcon1.ShowBalloonTip(4000, "Алярма!", "Алярма алярма, алярма. АЛЯРМА!", ToolTipIcon.Error);
+            WindowState = FormWindowState.Minimized;
+            ShowInTaskbar = false;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        // !прячем в трей
+        private void ShowForm()
         {
-            showNotification();
+            WindowState = FormWindowState.Normal;
+            ShowInTaskbar = false;
         }
 
-        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+        // уведомление
+        private void ShowNotification()
         {
-            this.Show();
+            notifyIcon1.ShowBalloonTip(4000, "Алярма!", "Алярма алярма, алярма. АЛЯРМА!", ToolTipIcon.Warning);
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Application.Exit();
-        }
-
-        private void showToolStripMenuItem_Click(object sender, EventArgs e) 
-        {
-            showNotification();
-        }
+        #endregion
     }
 }
-
-
-/*
- * MessageBox.Show("Program loaded.");
- * 
- * 
- */
