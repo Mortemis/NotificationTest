@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace NotificationTest
 {
@@ -8,7 +11,10 @@ namespace NotificationTest
         public Form1()
         {
             InitializeComponent();
+            InitSocket();
         }
+
+        Socket socket;
 
         #region Events handlers
 
@@ -31,7 +37,7 @@ namespace NotificationTest
 
         private void ShowToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowNotification();
+            ShowNotification("test");
         }
 
         private void NotifyIcon1_DoubleClick(object sender, EventArgs e)
@@ -45,7 +51,7 @@ namespace NotificationTest
 
         private void NotificationBtn_Click(object sender, EventArgs e)
         {
-            ShowNotification();
+            ShowNotification("test");
         }
 
 
@@ -60,6 +66,9 @@ namespace NotificationTest
             {
                 HideForm();
                 e.Cancel = true;
+            } else
+            {
+                socket.Close();
             }
         }
 
@@ -67,7 +76,7 @@ namespace NotificationTest
 
         #endregion
 
-        #region Private methods
+        #region Private form methods
 
         // прячем в трей
         private void HideForm()
@@ -84,11 +93,51 @@ namespace NotificationTest
         }
 
         // уведомление
-        private void ShowNotification()
+        private void ShowNotification(string notification)
         {
-            notifyIcon1.ShowBalloonTip(4000, "Алярма!", "Алярма алярма, алярма. АЛЯРМА!", ToolTipIcon.Warning);
+            notifyIcon1.ShowBalloonTip(4000, "Warning!", notification, ToolTipIcon.Warning);
         }
 
+        #endregion
+
+        #region Socket methods
+        
+        private void InitSocket() {
+            try
+            {
+                IPEndPoint serverAddress = new IPEndPoint(IPAddress.Parse("10.10.10.155"), 1024);
+
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                socket.Connect(serverAddress);
+
+                Thread socketThread = new Thread(SocketThread);
+                socketThread.Start();
+            } catch (SocketException e)
+            {
+                MessageBox.Show("Can not connect to server. . .");
+            }
+        }
+
+        void SocketThread()
+        {
+            while (socket.Connected)
+            {
+                try
+                {
+                    byte[] rcvLenBytes = new byte[4];
+                    socket.Receive(rcvLenBytes);
+                    int rcvLen = System.BitConverter.ToInt32(rcvLenBytes, 0);
+                    byte[] rcvBytes = new byte[rcvLen];
+                    socket.Receive(rcvBytes);
+                    String rcv = System.Text.Encoding.ASCII.GetString(rcvBytes);
+
+                    ShowNotification(rcv);
+                } catch (SocketException e)
+                {
+                    
+                }
+            }
+        }
         #endregion
     }
 }
